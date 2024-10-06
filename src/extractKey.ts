@@ -91,7 +91,7 @@ function extractDirective(
   query: OperationDefinitionNode,
   directiveName: string
 ): DirectiveNode | undefined {
-  return query.directives.filter((node) => node.name.value === directiveName)[0];
+  return query.directives?.filter((node) => node.name.value === directiveName)[0];
 }
 
 export function materializeKey(

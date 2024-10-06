@@ -1,9 +1,13 @@
 import {
+  ApolloClient,
   ApolloLink,
+  DocumentNode,
   execute,
   from,
   gql,
   GraphQLRequest,
+  InMemoryCache,
+  Observable,
 } from '@apollo/client/core';
 import SerializingLink from './SerializingLink';
 import {
@@ -286,17 +290,13 @@ describe('SerializingLink', () => {
     };
     return Promise.all([
       Promise.resolve(
-        assertObservableSequence(
-          execute(link, op1),
-          [...ts1.map(toResultValue)],
-          () => vi.runAllTimers()
+        assertObservableSequence(execute(link, op1), [...ts1.map(toResultValue)], () =>
+          vi.runAllTimers()
         )
       ),
       Promise.resolve(
-        assertObservableSequence(
-          execute(link, op2),
-          [...ts2.map(toResultValue)],
-          () => vi.runAllTimers()
+        assertObservableSequence(execute(link, op2), [...ts2.map(toResultValue)], () =>
+          vi.runAllTimers()
         )
       ),
     ]);
@@ -354,16 +354,14 @@ describe('SerializingLink', () => {
           execute(link, op1),
           [...ts1.map(toResultValue)],
           (sub: Unsubscribable) => {
-          setTimeout(() => sub.unsubscribe(), 5);
+            setTimeout(() => sub.unsubscribe(), 5);
             vi.runAllTimers();
           }
         )
       ),
       Promise.resolve(
-        assertObservableSequence(
-          execute(link, op2),
-          [...ts2.map(toResultValue)],
-          () => vi.runAllTimers()
+        assertObservableSequence(execute(link, op2), [...ts2.map(toResultValue)], () =>
+          vi.runAllTimers()
         )
       ),
     ]);
@@ -440,20 +438,52 @@ describe('SerializingLink', () => {
     };
     return Promise.resolve(
       assertObservableSequence(
-        mergeObservables(
-          execute(link, op1),
-          execute(link, op2),
-          execute(link, op3)
-        ),
-        [
-          toResultValue(ts1[0]),
-          toResultValue(ts2[0]),
-          ...ts3.map(toResultValue),
-        ],
+        mergeObservables(execute(link, op1), execute(link, op2), execute(link, op3)),
+        [toResultValue(ts1[0]), toResultValue(ts2[0]), ...ts3.map(toResultValue)],
         () => vi.runAllTimers()
       )
     );
   });
+
+  // Bug when using codegen document "Cannot read properties of undefined (reading 'filter')"" extractKey.ts#extractDirective
+  it('codegen query passes', async () => {
+    const mutation = {
+      kind: 'Document',
+      definitions: [
+        {
+          kind: 'OperationDefinition',
+          operation: 'mutation',
+          name: { kind: 'Name', value: 'FooBar' },
+          selectionSet: {
+            kind: 'SelectionSet',
+            selections: [],
+          },
+        },
+      ],
+    } as DocumentNode;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([
+        new SerializingLink(),
+        () => {
+          return new Observable((sub) => {
+            sub.next({
+              data: {
+                q3: 'ok',
+              },
+            });
+            sub.complete();
+          });
+        },
+      ]),
+    });
+
+    await client.mutate({
+      mutation,
+    });
+  });
+
   // TODO: Test unsubscribing from the second op
   // TODO?: Test subscribers without error, next or complete function?
   // or maybe those are just wrong types?
