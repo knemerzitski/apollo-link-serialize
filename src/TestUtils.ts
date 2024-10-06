@@ -1,5 +1,11 @@
 import { FetchResult } from '@apollo/client';
-import { ApolloLink, NextLink, Observable, Observer, Operation } from '@apollo/client/core';
+import {
+  ApolloLink,
+  NextLink,
+  Observable,
+  Observer,
+  Operation,
+} from '@apollo/client/core';
 import { ExecutionResult } from 'graphql';
 import { expect } from 'vitest';
 
@@ -112,7 +118,7 @@ export function toResultValue(e: ObservableEvent): ObservableEvent {
 export const assertObservableSequence = (
   observable: Observable<ExecutionResult>,
   sequence: ObservableValue[],
-  initializer: (sub: Unsubscribable) => void = () => undefined,
+  initializer: (sub: Unsubscribable) => void = () => undefined
 ): Promise<boolean | Error> => {
   let index = 0;
   if (sequence.length === 0) {

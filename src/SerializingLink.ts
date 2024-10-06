@@ -1,4 +1,10 @@
-import { ApolloLink, FetchResult, NextLink, Observable, Operation } from '@apollo/client/core';
+import {
+  ApolloLink,
+  FetchResult,
+  NextLink,
+  Observable,
+  Operation,
+} from '@apollo/client/core';
 import { Observer } from 'zen-observable-ts';
 import { extractKey } from './extractKey';
 

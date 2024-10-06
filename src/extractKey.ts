@@ -1,6 +1,10 @@
 import { Operation } from '@apollo/client/core';
 import { createOperation } from '@apollo/client/link/utils';
-import { checkDocument, cloneDeep, getOperationDefinition } from '@apollo/client/utilities';
+import {
+  checkDocument,
+  cloneDeep,
+  getOperationDefinition,
+} from '@apollo/client/utilities';
 import {
   ArgumentNode,
   DirectiveNode,
@@ -21,7 +25,7 @@ type DocumentCache = Map<DocumentNode, { doc: DocumentNode; args: ListValueNode 
 const documentCache: DocumentCache = new Map();
 function extractDirectiveArguments(
   doc: DocumentNode,
-  cache: DocumentCache = documentCache,
+  cache: DocumentCache = documentCache
 ): { doc: DocumentNode; args?: ListValueNode } {
   if (cache.has(doc)) {
     // We cache the transformed document to avoid re-parsing and transforming the same document
@@ -41,7 +45,9 @@ function extractDirectiveArguments(
     throw new Error(`The @${DIRECTIVE_NAME} directive requires a 'key' argument`);
   }
   if (argument.value.kind !== 'ListValue') {
-    throw new Error(`The @${DIRECTIVE_NAME} directive's 'key' argument must be of type List, got ${argument.kind}`);
+    throw new Error(
+      `The @${DIRECTIVE_NAME} directive's 'key' argument must be of type List, got ${argument.kind}`
+    );
   }
 
   const ret = {
@@ -81,15 +87,26 @@ export function extractKey(operation: Operation): {
   return { operation: newOperation, key };
 }
 
-function extractDirective(query: OperationDefinitionNode, directiveName: string): DirectiveNode | undefined {
+function extractDirective(
+  query: OperationDefinitionNode,
+  directiveName: string
+): DirectiveNode | undefined {
   return query.directives.filter((node) => node.name.value === directiveName)[0];
 }
 
-export function materializeKey(argumentList: ListValueNode, variables?: Record<string, any>): string {
-  return JSON.stringify(argumentList.values.map((val) => valueForArgument(val, variables)));
+export function materializeKey(
+  argumentList: ListValueNode,
+  variables?: Record<string, any>
+): string {
+  return JSON.stringify(
+    argumentList.values.map((val) => valueForArgument(val, variables))
+  );
 }
 
-export function valueForArgument(value: ValueNode, variables?: Record<string, any>): string | number | boolean {
+export function valueForArgument(
+  value: ValueNode,
+  variables?: Record<string, any>
+): string | number | boolean {
   if (value.kind === 'Variable') {
     return getVariableOrDie(variables, value.name.value);
   }
@@ -99,13 +116,22 @@ export function valueForArgument(value: ValueNode, variables?: Record<string, an
   if (value.kind === 'FloatValue') {
     return parseFloat(value.value);
   }
-  if (value.kind === 'StringValue' || value.kind === 'BooleanValue' || value.kind === 'EnumValue') {
+  if (
+    value.kind === 'StringValue' ||
+    value.kind === 'BooleanValue' ||
+    value.kind === 'EnumValue'
+  ) {
     return value.value;
   }
-  throw new Error(`Argument of type ${value.kind} is not allowed in @${DIRECTIVE_NAME} directive`);
+  throw new Error(
+    `Argument of type ${value.kind} is not allowed in @${DIRECTIVE_NAME} directive`
+  );
 }
 
-export function getVariableOrDie(variables: Record<string, any> | undefined, name: string): any {
+export function getVariableOrDie(
+  variables: Record<string, any> | undefined,
+  name: string
+): any {
   if (!variables || !(name in variables)) {
     throw new Error(`No value supplied for variable $${name} used in @serialize key`);
   }
@@ -114,7 +140,10 @@ export function getVariableOrDie(variables: Record<string, any> | undefined, nam
 
 // apollo-utilities removeDirectivesFromDocument currently doesn't remove them properly,
 // so we do it ourselves here.
-export function removeDirectiveFromDocument(doc: DocumentNode, directive?: DirectiveNode): DocumentNode {
+export function removeDirectiveFromDocument(
+  doc: DocumentNode,
+  directive?: DirectiveNode
+): DocumentNode {
   if (!directive) {
     return doc;
   }
@@ -122,25 +151,36 @@ export function removeDirectiveFromDocument(doc: DocumentNode, directive?: Direc
   const docWithoutDirective = cloneDeep(doc);
   const originalOperationDefinition = getOperationDefinition(doc);
   const operationDefinition = getOperationDefinition(docWithoutDirective);
-  operationDefinition.directives = originalOperationDefinition.directives.filter((node) => node !== directive);
+  operationDefinition.directives = originalOperationDefinition.directives.filter(
+    (node) => node !== directive
+  );
 
-  const removedVariableNames = getVariablesFromArguments(directive.arguments).map((v) => v.name.value);
+  const removedVariableNames = getVariablesFromArguments(directive.arguments).map(
+    (v) => v.name.value
+  );
 
   // Sometimes the serialization key is a variable that isn't used for anything else in the query.
   // In that case we need to remove the variable definition from the document to maintain its validity
   // when removing the @serialize directive.
-  removeVariableDefinitionsFromDocumentIfUnused(removedVariableNames, docWithoutDirective);
+  removeVariableDefinitionsFromDocumentIfUnused(
+    removedVariableNames,
+    docWithoutDirective
+  );
 
   return docWithoutDirective;
 }
 
-export function getAllArgumentsFromSelectionSet(selectionSet?: SelectionSetNode): ArgumentNode[] {
+export function getAllArgumentsFromSelectionSet(
+  selectionSet?: SelectionSetNode
+): ArgumentNode[] {
   if (!selectionSet) {
     return [];
   }
-  return selectionSet.selections.map(getAllArgumentsFromSelection).reduce((allArguments, selectionArguments) => {
-    return [...allArguments, ...selectionArguments];
-  }, []);
+  return selectionSet.selections
+    .map(getAllArgumentsFromSelection)
+    .reduce((allArguments, selectionArguments) => {
+      return [...allArguments, ...selectionArguments];
+    }, []);
 }
 
 export function getAllArgumentsFromSelection(selection: SelectionNode): ArgumentNode[] {
@@ -156,7 +196,9 @@ export function getAllArgumentsFromSelection(selection: SelectionNode): Argument
   return args;
 }
 
-export function getAllArgumentsFromDirectives(directives?: DirectiveNode[]): ArgumentNode[] {
+export function getAllArgumentsFromDirectives(
+  directives?: DirectiveNode[]
+): ArgumentNode[] {
   return directives
     .map((d) => d.arguments || [])
     .reduce((allArguments, directiveArguments) => {
@@ -180,16 +222,26 @@ export function getAllArgumentsFromDocument(doc: DocumentNode): ArgumentNode[] {
     }, []);
 }
 
-export function getAllArgumentsFromOperation(op: OperationDefinitionNode): ArgumentNode[] {
-  return getAllArgumentsFromDirectives(op.directives).concat(getAllArgumentsFromSelectionSet(op.selectionSet));
+export function getAllArgumentsFromOperation(
+  op: OperationDefinitionNode
+): ArgumentNode[] {
+  return getAllArgumentsFromDirectives(op.directives).concat(
+    getAllArgumentsFromSelectionSet(op.selectionSet)
+  );
 }
 
-export function getAllArgumentsFromFragment(frag: FragmentDefinitionNode): ArgumentNode[] {
-  return getAllArgumentsFromDirectives(frag.directives).concat(getAllArgumentsFromSelectionSet(frag.selectionSet));
+export function getAllArgumentsFromFragment(
+  frag: FragmentDefinitionNode
+): ArgumentNode[] {
+  return getAllArgumentsFromDirectives(frag.directives).concat(
+    getAllArgumentsFromSelectionSet(frag.selectionSet)
+  );
 }
 
 export function getVariablesFromArguments(args: ArgumentNode[]): VariableNode[] {
-  return args.map((arg) => getVariablesFromValueNode(arg.value)).reduce((a, b) => a.concat(b), []);
+  return args
+    .map((arg) => getVariablesFromValueNode(arg.value))
+    .reduce((a, b) => a.concat(b), []);
 }
 
 export function getVariablesFromValueNode(node: ValueNode): VariableNode[] {
@@ -212,7 +264,10 @@ export function getVariablesFromValueNode(node: ValueNode): VariableNode[] {
 }
 
 // Warning: This function may modify the document in place
-export function removeVariableDefinitionsFromDocumentIfUnused(names: string[], doc: DocumentNode): void {
+export function removeVariableDefinitionsFromDocumentIfUnused(
+  names: string[],
+  doc: DocumentNode
+): void {
   if (names.length < 1) {
     return;
   }
@@ -227,6 +282,8 @@ export function removeVariableDefinitionsFromDocumentIfUnused(names: string[], d
 
   const op = getOperationDefinition(doc);
   if (op.variableDefinitions) {
-    op.variableDefinitions = op.variableDefinitions.filter((d) => !filteredNames.has(d.variable.name.value));
+    op.variableDefinitions = op.variableDefinitions.filter(
+      (d) => !filteredNames.has(d.variable.name.value)
+    );
   }
 }
