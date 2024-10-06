@@ -17,12 +17,13 @@
     "graphql": "^16.9.0",
     "jsdom": "^25.0.1",
     "prettier": "^3.3.3",
+    "tsup": "^8.3.0",
     "typescript": "^5.6.2",
     "vitest": "^2.1.2"
   },
-  "type": "module",
   "main": "build/dist/index.js",
-  "module": "build/dist/index.js",
+  "module": "build/dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "knemerzitski/apollo-link-serialize"
@@ -30,7 +31,7 @@
   "jsnext:main": "build/dist/index.js",
   "typings": "build/dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/index.ts --d build/dist --format cjs,esm --dts --clean",
     "lint": "eslint -c .eslintrc.json --ext .ts src/**/*",
     "test": "vitest --environment=jsdom",
     "coverage": "vitest --coverage"

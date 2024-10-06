@@ -20,6 +20,7 @@
       "typescript": {}
     }
   },
+  "ignorePatterns": ["build", "vitest.config.mts"],
   "rules": {
     "no-console": [
       "error",
