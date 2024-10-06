@@ -1,6 +1,7 @@
 {
-  "name": "apollo-link-serialize",
-  "version": "4.0.0",
+  "name": "@knemerzitski/apollo-link-serialize",
+  "version": "5.0.0",
+  "versionUpstream": "4.0.0",
   "description": "A link that serializes requests by key, making sure that they execute in the exact order submitted",
   "dependencies": {
     "@apollo/client": "^3.3.20",
@@ -24,7 +25,7 @@
   "module": "build/dist/index.js",
   "repository": {
     "type": "git",
-    "url": "helfer/apollo-link-serialize"
+    "url": "knemerzitski/apollo-link-serialize"
   },
   "jsnext:main": "build/dist/index.js",
   "typings": "build/dist/index.d.ts",
