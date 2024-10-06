@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Operation } from '@apollo/client/core';
 import { createOperation } from '@apollo/client/link/utils';
 import {
@@ -31,16 +37,16 @@ function extractDirectiveArguments(
     // We cache the transformed document to avoid re-parsing and transforming the same document
     // over and over again. The cache relies on referential equality between documents. If using
     // graphql-tag this is a given, so it should work out of the box in most cases.
-    return cache.get(doc);
+    return cache.get(doc) as any;
   }
 
   checkDocument(doc);
 
-  const directive = extractDirective(getOperationDefinition(doc), DIRECTIVE_NAME);
+  const directive = extractDirective(getOperationDefinition(doc)!, DIRECTIVE_NAME);
   if (!directive) {
     return { doc };
   }
-  const argument = directive.arguments.find((d) => d.name.value === 'key');
+  const argument = directive.arguments?.find((d) => d.name.value === 'key');
   if (!argument) {
     throw new Error(`The @${DIRECTIVE_NAME} directive requires a 'key' argument`);
   }
@@ -151,7 +157,8 @@ export function removeDirectiveFromDocument(
   const docWithoutDirective = cloneDeep(doc);
   const originalOperationDefinition = getOperationDefinition(doc);
   const operationDefinition = getOperationDefinition(docWithoutDirective);
-  operationDefinition.directives = originalOperationDefinition.directives.filter(
+  //@ts-expect-error Assigning to read-only property
+  operationDefinition.directives = originalOperationDefinition?.directives?.filter(
     (node) => node !== directive
   );
 
@@ -172,7 +179,7 @@ export function removeDirectiveFromDocument(
 
 export function getAllArgumentsFromSelectionSet(
   selectionSet?: SelectionSetNode
-): ArgumentNode[] {
+): readonly ArgumentNode[] {
   if (!selectionSet) {
     return [];
   }
@@ -183,7 +190,9 @@ export function getAllArgumentsFromSelectionSet(
     }, []);
 }
 
-export function getAllArgumentsFromSelection(selection: SelectionNode): ArgumentNode[] {
+export function getAllArgumentsFromSelection(
+  selection: SelectionNode
+): readonly ArgumentNode[] {
   if (!selection) {
     return [];
   }
@@ -197,13 +206,15 @@ export function getAllArgumentsFromSelection(selection: SelectionNode): Argument
 }
 
 export function getAllArgumentsFromDirectives(
-  directives?: DirectiveNode[]
-): ArgumentNode[] {
-  return directives
-    .map((d) => d.arguments || [])
-    .reduce((allArguments, directiveArguments) => {
-      return [...allArguments, ...directiveArguments];
-    }, []);
+  directives?: readonly DirectiveNode[]
+): readonly ArgumentNode[] {
+  return (
+    directives
+      ?.map((d) => d.arguments || [])
+      .reduce((allArguments, directiveArguments) => {
+        return [...allArguments, ...directiveArguments];
+      }, []) ?? []
+  );
 }
 
 export function getAllArgumentsFromDocument(doc: DocumentNode): ArgumentNode[] {
@@ -238,10 +249,14 @@ export function getAllArgumentsFromFragment(
   );
 }
 
-export function getVariablesFromArguments(args: ArgumentNode[]): VariableNode[] {
-  return args
-    .map((arg) => getVariablesFromValueNode(arg.value))
-    .reduce((a, b) => a.concat(b), []);
+export function getVariablesFromArguments(
+  args: readonly ArgumentNode[] | undefined
+): VariableNode[] {
+  return (
+    args
+      ?.map((arg) => getVariablesFromValueNode(arg.value))
+      .reduce((a, b) => a.concat(b), []) ?? []
+  );
 }
 
 export function getVariablesFromValueNode(node: ValueNode): VariableNode[] {
@@ -281,7 +296,8 @@ export function removeVariableDefinitionsFromDocumentIfUnused(
   }
 
   const op = getOperationDefinition(doc);
-  if (op.variableDefinitions) {
+  if (op?.variableDefinitions) {
+    //@ts-expect-error Assigning to read-only property
     op.variableDefinitions = op.variableDefinitions.filter(
       (d) => !filteredNames.has(d.variable.name.value)
     );

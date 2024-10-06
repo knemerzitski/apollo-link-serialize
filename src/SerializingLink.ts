@@ -21,7 +21,11 @@ export interface OperationQueueEntry {
 export default class SerializingLink extends ApolloLink {
   private opQueues: { [key: string]: OperationQueueEntry[] } = {};
 
-  public request(origOperation: Operation, forward: NextLink) {
+  public override request(origOperation: Operation, forward?: NextLink) {
+    if (forward == null) {
+      return null;
+    }
+
     const { operation, key } = extractKey(origOperation);
     if (!key) {
       return forward(operation);
@@ -58,7 +62,7 @@ export default class SerializingLink extends ApolloLink {
 
     if (idx >= 0) {
       const entry = this.opQueues[key][idx];
-      if (entry.subscription) {
+      if (entry?.subscription) {
         entry.subscription.unsubscribe();
       }
       this.opQueues[key].splice(idx, 1);
@@ -70,26 +74,28 @@ export default class SerializingLink extends ApolloLink {
   private startFirstOpIfNotStarted = (key: string) => {
     // At this point, the queue always exists, but it may not have any elements
     // If it has no elements, we free up the memory it was using.
-    if (this.opQueues[key].length === 0) {
+    if (this.opQueues[key] != null && this.opQueues[key].length === 0) {
       delete this.opQueues[key];
       return;
     }
-    const { operation, forward, observer, subscription } = this.opQueues[key][0];
-    if (subscription) {
-      return;
+    if (this.opQueues?.[key]?.[0]) {
+      const { operation, forward, observer, subscription } = this.opQueues[key][0];
+      if (subscription) {
+        return;
+      }
+      this.opQueues[key][0].subscription = forward(operation).subscribe({
+        next: (v: FetchResult) => observer.next && observer.next(v),
+        error: (e: Error) => {
+          if (observer.error) {
+            observer.error(e);
+          }
+        },
+        complete: () => {
+          if (observer.complete) {
+            observer.complete();
+          }
+        },
+      });
     }
-    this.opQueues[key][0].subscription = forward(operation).subscribe({
-      next: (v: FetchResult) => observer.next && observer.next(v),
-      error: (e: Error) => {
-        if (observer.error) {
-          observer.error(e);
-        }
-      },
-      complete: () => {
-        if (observer.complete) {
-          observer.complete();
-        }
-      },
-    });
   };
 }

@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { FetchResult } from '@apollo/client';
 import {
   ApolloLink,
@@ -6,7 +10,7 @@ import {
   Observer,
   Operation,
 } from '@apollo/client/core';
-import { ExecutionResult } from 'graphql';
+import { ExecutionResult, FormattedExecutionResult } from 'graphql';
 import { expect } from 'vitest';
 
 export interface ObservableValue {
@@ -45,16 +49,16 @@ export class TestLink extends ApolloLink {
     this.operations = [];
   }
 
-  public request(operation: Operation) {
+  public override request(operation: Operation) {
     this.operations.push(operation);
     // TODO(helfer): Throw an error if neither testError nor testResponse is defined
     return new Observable((observer: Observer<FetchResult>) => {
       if (operation.getContext().testError) {
-        setTimeout(() => observer.error(operation.getContext().testError), 0);
+        setTimeout(() => observer.error?.(operation.getContext().testError), 0);
         return;
       }
-      setTimeout(() => observer.next(operation.getContext().testResponse), 0);
-      setTimeout(() => observer.complete(), 0);
+      setTimeout(() => observer.next?.(operation.getContext().testResponse), 0);
+      setTimeout(() => observer.complete?.(), 0);
     });
   }
 }
@@ -66,7 +70,7 @@ export class TestSequenceLink extends ApolloLink {
     this.operations = [];
   }
 
-  public request(operation: Operation, forward: NextLink) {
+  public override request(operation: Operation, forward: NextLink) {
     if (!operation.getContext().testSequence) {
       return forward(operation);
     }
@@ -75,32 +79,32 @@ export class TestSequenceLink extends ApolloLink {
     return new Observable((observer: Observer<ExecutionResult>) => {
       operation.getContext().testSequence.forEach((event: ObservableEvent) => {
         if (event.type === 'error') {
-          setTimeout(() => observer.error(event.value), event.delay || 0);
+          setTimeout(() => observer.error?.(event.value), event.delay || 0);
           return;
         }
         if (event.type === 'next') {
-          setTimeout(() => observer.next(event.value), event.delay || 0);
+          setTimeout(() => observer.next?.(event.value), event.delay || 0);
         }
         if (event.type === 'complete') {
-          setTimeout(() => observer.complete(), event.delay || 0);
+          setTimeout(() => observer.complete?.(), event.delay || 0);
         }
       });
     });
   }
 }
 
-export function mergeObservables(...observables: Observable<ExecutionResult>[]) {
-  return new Observable((observer: Observer<ExecutionResult>) => {
+export function mergeObservables(...observables: Observable<FormattedExecutionResult>[]) {
+  return new Observable((observer: Observer<FormattedExecutionResult>) => {
     const numObservables = observables.length;
     let completedObservables = 0;
     observables.forEach((o) => {
       o.subscribe({
-        next: observer.next.bind(observer),
-        error: observer.error.bind(observer),
+        next: observer.next?.bind(observer),
+        error: observer.error?.bind(observer),
         complete: () => {
           completedObservables++;
           if (completedObservables === numObservables) {
-            observer.complete();
+            observer.complete?.();
           }
         },
       });
@@ -116,7 +120,7 @@ export function toResultValue(e: ObservableEvent): ObservableEvent {
 }
 
 export const assertObservableSequence = (
-  observable: Observable<ExecutionResult>,
+  observable: Observable<FormattedExecutionResult>,
   sequence: ObservableValue[],
   initializer: (sub: Unsubscribable) => void = () => undefined
 ): Promise<boolean | Error> => {
@@ -126,7 +130,7 @@ export const assertObservableSequence = (
   }
   return new Promise((resolve) => {
     const sub = observable.subscribe({
-      next: (value: ExecutionResult) => {
+      next: (value: FormattedExecutionResult) => {
         expect({ type: 'next', value }).toEqual(sequence[index]);
         index++;
         if (index === sequence.length) {
