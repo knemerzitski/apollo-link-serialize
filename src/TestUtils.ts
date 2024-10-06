@@ -1,6 +1,7 @@
 import { FetchResult } from '@apollo/client';
 import { ApolloLink, NextLink, Observable, Observer, Operation } from '@apollo/client/core';
 import { ExecutionResult } from 'graphql';
+import { expect } from 'vitest';
 
 export interface ObservableValue {
   value?: ExecutionResult | Error;

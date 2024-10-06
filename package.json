@@ -4,25 +4,22 @@
   "description": "A link that serializes requests by key, making sure that they execute in the exact order submitted",
   "dependencies": {
     "@apollo/client": "^3.3.20",
-    "zen-observable-ts": "^0.8.11"
+    "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@types/graphql": "^0.11.7",
-    "@types/jest": "^20.0.8",
-    "@types/node": "^8.0.26",
-    "@typescript-eslint/eslint-plugin": "^4.26.1",
-    "@typescript-eslint/parser": "^4.26.1",
-    "codecov": "^2.3.0",
-    "eslint": "^7.28.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^3.4.0",
-    "graphql": "^0.11.7",
-    "nyc": "^11.2.1",
-    "prettier": "^2.3.1",
-    "react-scripts-ts": "^2.6.0",
-    "ts-jest": "^20.0.14",
-    "typescript": "^3.5.1"
+    "@types/node": "20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@vitest/coverage-v8": "^2.1.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "graphql": "^16.9.0",
+    "jsdom": "^25.0.1",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.2"
   },
+  "type": "module",
   "main": "build/dist/index.js",
   "module": "build/dist/index.js",
   "repository": {
@@ -34,9 +31,8 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint -c .eslintrc.json --ext .ts src/**/*",
-    "test": "react-scripts-ts test --coverage --collectCoverageFrom=src/**/*.ts* --collectCoverageFrom=!src/index.ts --collectCoverageFrom=!src/TestUtils.ts && yarn run lint",
-    "testonly": "react-scripts-ts test --env=jsdom",
-    "coverage": "codecov -f coverage/*.json"
+    "test": "vitest --environment=jsdom",
+    "coverage": "vitest --coverage"
   },
   "keywords": [
     "graphql",

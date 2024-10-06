@@ -14,6 +14,7 @@ import {
   toResultValue,
   Unsubscribable,
 } from './TestUtils';
+import { describe, beforeEach, it, vi, expect } from 'vitest';
 
 // TODO: Reduce test boilerplate code
 // TODO: Consolidate test utilities
@@ -50,7 +51,7 @@ describe('SerializingLink', () => {
   };
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     testLink = new TestSequenceLink();
     link = from([new SerializingLink(), testLink]);
   });
@@ -66,7 +67,7 @@ describe('SerializingLink', () => {
           resolve();
         },
       });
-      jest.runAllTimers();
+      vi.runAllTimers();
     });
   });
   it('forwards the operation if context.serializationKey is not defined', () => {
@@ -90,7 +91,7 @@ describe('SerializingLink', () => {
           resolve();
         },
       });
-      jest.runAllTimers();
+      vi.runAllTimers();
     });
   });
   it('calls next and complete as expected', () => {
@@ -98,7 +99,7 @@ describe('SerializingLink', () => {
       assertObservableSequence(
         execute(link, op),
         [{ type: 'next', value: testResponse }, { type: 'complete' }],
-        () => jest.runAllTimers()
+        () => vi.runAllTimers()
       )
     );
   });
@@ -119,7 +120,7 @@ describe('SerializingLink', () => {
       assertObservableSequence(
         execute(link, opWithError),
         [{ type: 'error', value: testError }],
-        () => jest.runAllTimers()
+        () => vi.runAllTimers()
       )
     );
   });
@@ -172,7 +173,7 @@ describe('SerializingLink', () => {
       assertObservableSequence(
         mergeObservables(execute(link, op1), execute(link, op2)),
         [toResultValue(ts2[0]), ...ts1.map(toResultValue)],
-        () => jest.runAllTimers()
+        () => vi.runAllTimers()
       )
     );
   });
@@ -229,7 +230,7 @@ describe('SerializingLink', () => {
       assertObservableSequence(
         mergeObservables(execute(link, op1), execute(link, op2)),
         [toResultValue(ts1[0]), ...ts2.map(toResultValue)],
-        () => jest.runAllTimers()
+        () => vi.runAllTimers()
       )
     );
   });
@@ -288,14 +289,14 @@ describe('SerializingLink', () => {
         assertObservableSequence(
           execute(link, op1),
           [...ts1.map(toResultValue)],
-          () => jest.runAllTimers()
+          () => vi.runAllTimers()
         )
       ),
       Promise.resolve(
         assertObservableSequence(
           execute(link, op2),
           [...ts2.map(toResultValue)],
-          () => jest.runAllTimers()
+          () => vi.runAllTimers()
         )
       ),
     ]);
@@ -353,8 +354,8 @@ describe('SerializingLink', () => {
           execute(link, op1),
           [...ts1.map(toResultValue)],
           (sub: Unsubscribable) => {
-            setTimeout(() => sub.unsubscribe(), 5);
-            jest.runAllTimers();
+          setTimeout(() => sub.unsubscribe(), 5);
+            vi.runAllTimers();
           }
         )
       ),
@@ -362,7 +363,7 @@ describe('SerializingLink', () => {
         assertObservableSequence(
           execute(link, op2),
           [...ts2.map(toResultValue)],
-          () => jest.runAllTimers()
+          () => vi.runAllTimers()
         )
       ),
     ]);
@@ -449,7 +450,7 @@ describe('SerializingLink', () => {
           toResultValue(ts2[0]),
           ...ts3.map(toResultValue),
         ],
-        () => jest.runAllTimers()
+        () => vi.runAllTimers()
       )
     );
   });

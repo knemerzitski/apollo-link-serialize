@@ -7,6 +7,7 @@ import {
   getVariablesFromArguments,
   removeVariableDefinitionsFromDocumentIfUnused,
 } from './extractKey';
+import { describe, expect, it } from 'vitest';
 
 describe('extractKey', () => {
   it('prefers context.serializationKey if the directive is also supplied', () => {
