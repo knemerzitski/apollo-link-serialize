@@ -251,14 +251,14 @@ describe('extractKey', () => {
     expect(op1.query).toBe(op2.query);
   });
 
-  it('joinDirectiveAndContext', () => {
+  it('serializationKeyDirective', () => {
     const query = gql`
       mutation something($var: String) @serialize(key: [$var]) {
         doThing
       }
     `;
     const firstOperation = createOperation(
-      { serializationKey: 'foo' },
+      { serializationKeyDirective: 'foo' },
       {
         query,
         variables: {
@@ -266,7 +266,7 @@ describe('extractKey', () => {
         },
       }
     );
-    const { key } = extractKey(firstOperation, true);
+    const { key } = extractKey(firstOperation);
 
     expect(key).toMatchInlineSnapshot(`"foo-["bar"]"`);
   });

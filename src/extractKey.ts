@@ -64,35 +64,25 @@ function extractDirectiveArguments(
   return ret;
 }
 
-export function extractKey(
-  operation: Operation,
-  joinDirectiveAndContext = false
-): {
+export function extractKey(operation: Operation): {
   operation: Operation;
   key?: string;
 } {
-  const keys: string[] = [];
-  const { serializationKey } = operation.getContext();
+  const { serializationKey, serializationKeyDirective } = operation.getContext();
   if (serializationKey) {
-    if (!joinDirectiveAndContext) {
-      return { operation, key: serializationKey };
-    } else {
-      keys.push(serializationKey);
-    }
+    return { operation, key: serializationKey };
   }
 
   const { doc, args } = extractDirectiveArguments(operation.query);
 
   if (!args) {
-    const key = keys.join('-');
-    if (key.length > 0) {
-      return { operation, key };
-    } else {
-      return { operation };
+    if (serializationKeyDirective) {
+      return { operation, key: serializationKeyDirective };
     }
+    return { operation };
   }
 
-  keys.push(materializeKey(args, operation.variables));
+  const key = materializeKey(args, operation.variables);
 
   // Pass through the operation, with the directive removed so that the server
   // doesn't see it.
@@ -103,7 +93,11 @@ export function extractKey(
     query: doc,
   });
 
-  return { operation: newOperation, key: keys.join('-') };
+  if (serializationKeyDirective) {
+    return { operation: newOperation, key: `${serializationKeyDirective}-${key}` };
+  }
+
+  return { operation: newOperation, key };
 }
 
 function extractDirective(
