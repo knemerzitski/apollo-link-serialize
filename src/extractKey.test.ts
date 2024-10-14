@@ -250,6 +250,26 @@ describe('extractKey', () => {
     expect(key2).toEqual('["baz"]');
     expect(op1.query).toBe(op2.query);
   });
+
+  it('joinDirectiveAndContext', () => {
+    const query = gql`
+      mutation something($var: String) @serialize(key: [$var]) {
+        doThing
+      }
+    `;
+    const firstOperation = createOperation(
+      { serializationKey: 'foo' },
+      {
+        query,
+        variables: {
+          var: 'bar',
+        },
+      }
+    );
+    const { key } = extractKey(firstOperation, true);
+
+    expect(key).toMatchInlineSnapshot(`"foo-["bar"]"`);
+  });
 });
 
 describe('removeVariableDefinitionsFromDocumentIfUnused', () => {

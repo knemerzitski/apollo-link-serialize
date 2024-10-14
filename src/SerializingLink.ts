@@ -21,12 +21,30 @@ export interface OperationQueueEntry {
 export default class SerializingLink extends ApolloLink {
   private opQueues: { [key: string]: OperationQueueEntry[] } = {};
 
+  static readonly SERIALIZE = 'serializationKey';
+
+  constructor(
+    private readonly options?: {
+      /**
+       * Use serialize key from both document directive and context `serializationKey`. \
+       * By default `serializationKey` takes precedence over document directive.
+       * @default false
+       */
+      joinDirectiveAndContext?: boolean;
+    }
+  ) {
+    super();
+  }
+
   public override request(origOperation: Operation, forward?: NextLink) {
     if (forward == null) {
       return null;
     }
 
-    const { operation, key } = extractKey(origOperation);
+    const { operation, key } = extractKey(
+      origOperation,
+      this.options?.joinDirectiveAndContext
+    );
     if (!key) {
       return forward(operation);
     }
